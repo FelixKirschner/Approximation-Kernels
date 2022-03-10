@@ -1,38 +1,25 @@
-using AbstractAlgebra
-using SparseArrays
-using LinearAlgebra
 
-
-
-#init function for the g_i stuff
 function init(n, k)
-    #allbeta = []
     β = []
     μ = []
-    #function that constructs basis elements
-    
 
     β = fillmonomials(n, k)
 
-    #since permutations of the exponent vector dont change anything we only need one representative
-    # for b in β
-    #     sort!(b)
-    # end
-
-    # unique!(β)
-
-    for b in β
-        #list = collect()
-        for el in permutations(b)
-            if in(el, β)
-                filter!(x -> x != el, β)
-                # for i in findall(x -> x == el, β)
-                #     deleteat!(β, i)
-                # end
-            end
-        end
-        push!(β, sort!(b))
+    for el in β
+        sort!(el)
     end
+    unique!(β)
+
+    # for b in β
+        
+    #     for el in permutations(b)
+    #         if in(el, β)
+    #             filter!(x -> x != el, β)
+                
+    #         end
+    #     end
+    #     push!(β, sort!(b))
+    # end
     
     for b in β
         btmp = unique(b)
@@ -48,9 +35,7 @@ function init(n, k)
     return β, μ
 end
 
-A,B = init(3,3)
-B
-A
+
 # Split permutation into transpositions of form (j,j+1)
 function permDecomp(p::Perm)
     res = []

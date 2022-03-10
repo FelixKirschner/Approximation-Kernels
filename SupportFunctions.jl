@@ -1,20 +1,20 @@
-using Combinatorics
 
 function fillmonomials(n, r)
+    #this function returns an array of exponent vectors for all monomials in n variables up to degree r
     monlist = []
-  for p in Combinatorics.combinations(1:(n+r), r)
-      sort!(p)
-      c = zeros(Int64, 1, n + 1)
-      pos = 1
-      lastPos = 0
-      for i in p
-          pos = pos + (i - lastPos - 1)
-          c[pos] += 1
-          lastPos = i
-      end
-      push!(monlist, c[1:n])
-  end
-  return monlist
+    for p in Combinatorics.combinations(1:(n+r), r)
+        sort!(p)
+        c = zeros(Int64, 1, n + 1)
+        pos = 1
+        lastPos = 0
+        for i in p
+            pos = pos + (i - lastPos - 1)
+            c[pos] += 1
+            lastPos = i
+        end
+        push!(monlist, c[1:n])
+    end
+    return monlist
 end
 
 
@@ -28,7 +28,7 @@ function flips(gamma)
             push!(binarr2, el)
         end
     end
-    
+
     list = []
     for el in binarr2
         push!(list, [gamma[i] * el[i] for i = 1:n])
@@ -37,7 +37,7 @@ function flips(gamma)
 end
 
 function symmetrizeBaseProduct(baseElement1::Vector{Any}, baseElement2::Vector{Any})
-    
+    #This function returns the symmetrized product of two base elements in the symmetry adapted basis
     n = length(baseElement1[1]) - 1
 
     perms = collect(permutations([i for i = 1:n]))
@@ -79,6 +79,7 @@ end
 
 
 function checkOrth(base)
+    #NOT USED in final code
     #test function, are the elements of the base pairwise orthogonal ? true : false 
     orth = true
     for i = 1:length(base)
@@ -98,12 +99,14 @@ function checkOrth(base)
 end
 
 function initializeBasis(n, r)
+    #Construct the symmetry adapted bases for n variables up to degree r
     λ = [AbstractAlgebra.Partition(el) for el in collect(partitions(n))]
-    
+
     βf, μf = init(n, r)
-    
+
     fbas = [getPartOfBasis(λ[i], μf, βf, r) for i = 1:length(λ)]
 
+    #just to be sure...
     for base in fbas
         unique!(base)
     end
@@ -118,6 +121,8 @@ end
 
 
 function orbitSize(mon)
+    #NOT USED in final code
+    #returns the orbit size of a monomial under S_n
     perms = collect(permutations([i for i = 1:length(mon)]))
     list = []
     for p in perms
@@ -127,32 +132,33 @@ function orbitSize(mon)
 end
 
 function writeKernel(list, n::Integer, r::Integer, bar::Bool)
+    #This function takes the coefficients of an optimal kernel and writes them in a text file in lexicographic order
     auxMon = fillmonomials(n, r)
     for el in auxMon
         sort!(el)
     end
-    
+
     unique!(auxMon)
-    
+
     gList = []
-    
+
     for i = 1:length(auxMon)-1
         push!(gList, 0.5 * sum(dot(vec(list[2][j]), vec(list[3][i][j])) for j = 1:length(list[2])))
     end
-    
+
     push!(gList, 1.0)
-    
+
     dict = Dict([auxMon[i] => gList[i] for i = 1:length(auxMon)])
-    
+
     newMon = fillmonomials(n, r)
-    
+
     gListFin = []
     for el in newMon
         push!(gListFin, dict[sort!(el)])
     end
     reverse!(gListFin)
     cd(@__DIR__)
-    if bar 
+    if bar
         str1 = "sigmaBarkernel"
     else
         str1 = "sigmakernel"
@@ -167,6 +173,7 @@ function writeKernel(list, n::Integer, r::Integer, bar::Bool)
 end
 
 function setUpModel(n::Integer, r::Integer, bar::Bool, silent::Bool, solver::String, dictBaseproducts, baseProducts, fbas, rMons, dictMons)
+    #This function sets up the JuMP model
 
     vrbl = Array{VariableRef}[]
 
@@ -175,7 +182,6 @@ function setUpModel(n::Integer, r::Integer, bar::Bool, silent::Bool, solver::Str
     constrMat = Vector{SparseMatrixCSC{Float64,Int64}}[]
     constrMatTwo = Vector{SparseMatrixCSC{Float64,Int64}}[]
     gcoeffMat = Vector{SparseMatrixCSC{Float64,Int64}}[]
-
 
 
     if solver == "Mosek"
@@ -189,9 +195,6 @@ function setUpModel(n::Integer, r::Integer, bar::Bool, silent::Bool, solver::Str
     if silent
         MOI.set(m, MOI.Silent(), true)
     end
-    
-
-
 
 
     @variable(m, t >= 0)
@@ -267,7 +270,7 @@ function setUpModel(n::Integer, r::Integer, bar::Bool, silent::Bool, solver::Str
                 )
             end
 
-            for el in dictMons[gamma] #indicesLookUp[locGamma[1]]
+            for el in dictMons[gamma]
                 tmp = dictBaseproducts[(el[1], el[2], el[3])]
                 loc = findall(x -> x == gamma, tmp[1])
                 sublist[el[1]][el[2], el[3]] = sum(tmp[2][loci] for loci in loc)
@@ -276,7 +279,6 @@ function setUpModel(n::Integer, r::Integer, bar::Bool, silent::Bool, solver::Str
 
             if gamma == eOne
                 push!(geOne, sublist)
-                #display(geOne)
             end
 
             if bar && in(gamma, canUnit2)
@@ -346,7 +348,7 @@ function setUpModel(n::Integer, r::Integer, bar::Bool, silent::Bool, solver::Str
 
         for el in dictMons[gamma]
             tmp = dictBaseproducts[(el[1], el[2], el[3])]
-            loc = findall(x -> x == gamma || x == (-1)*gamma, tmp[1])
+            loc = findall(x -> x == gamma || x == (-1) * gamma, tmp[1])
             sublist[el[1]][el[2], el[3]] = sum(tmp[2][loci] for loci in loc)
             sublist[el[1]][el[3], el[2]] = sum(tmp[2][loci] for loci in loc)
         end
