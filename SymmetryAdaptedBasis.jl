@@ -10,17 +10,6 @@ function init(n, k)
     end
     unique!(β)
 
-    # for b in β
-        
-    #     for el in permutations(b)
-    #         if in(el, β)
-    #             filter!(x -> x != el, β)
-                
-    #         end
-    #     end
-    #     push!(β, sort!(b))
-    # end
-    
     for b in β
         btmp = unique(b)
         mu = []
@@ -291,4 +280,3 @@ function getPartOfBasis(lambda, mu, beta,r)
     end
     return retBase
 end
-#Symmetry Adapted basis
