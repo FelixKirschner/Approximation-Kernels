@@ -1,25 +1,8 @@
 using AbstractAlgebra
 using SparseArrays
 using LinearAlgebra
-using Combinatorics
 
 
-function fillmonomials(n, r)
-        monlist = []
-      for p in Combinatorics.combinations(1:(n+r), r)
-          sort!(p)
-          c = zeros(Int64, 1, n + 1)
-          pos = 1
-          lastPos = 0
-          for i in p
-              pos = pos + (i - lastPos - 1)
-              c[pos] += 1
-              lastPos = i
-          end
-          push!(monlist, c[1:n])
-      end
-      return monlist
-end
 
 #init function for the g_i stuff
 function init(n, k)
