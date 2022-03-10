@@ -8,7 +8,7 @@ This code
 
 =#
 cd(@__DIR__)
-include("SymAdBasMarch.jl")
+include("SymmetryAdaptedBasis.jl")
 using JuMP
 using MosekTools
 using CSDP
@@ -24,7 +24,7 @@ function flips(gamma)
             push!(binarr2, el)
         end
     end
-    #return binarr2
+    
     list = []
     for el in binarr2
         push!(list, [gamma[i] * el[i] for i = 1:n])
@@ -73,7 +73,9 @@ function symmetrizeBaseProduct(baseElement1::Vector{Any}, baseElement2::Vector{A
     return [retListMon, retListCoeff]
 end
 
+
 function checkOrth(base)
+    #test function, are the elements of the base pairwise orthogonal ? true : false 
     orth = true
     for i = 1:length(base)
         for j = i+1:length(base)
@@ -92,16 +94,8 @@ function checkOrth(base)
 end
 
 function initializeBasis(n, r)
-    #generate all exponent vectors in n variables of degree <= k
-    #allbetaf = []
-    #will be all relevant exponent vectors
-    #βf = []
-    #will be the content of the vectors
-    #μf = []
-    #the irreducible components correspont to partition of n
     λ = [AbstractAlgebra.Partition(el) for el in collect(partitions(n))]
-    #moment variables will correspond to the entries in momVar
-    #momVar = []
+    
     βf, μf = init(n, r)
     
     fbas = [getPartOfBasis(λ[i], μf, βf, r) for i = 1:length(λ)]
@@ -128,27 +122,37 @@ function orbitSize(mon)
     return length(unique!(list))
 end
 
-function writeKernel(list, n, r)
-    auxMon = fillmonomialsAlt(n, r)
+function writeKernel(list, n::Integer, r::Integer, bar::Bool)
+    auxMon = fillmonomials(n, r)
     for el in auxMon
         sort!(el)
     end
-    #orbitSizes = Dict(u=>count(x -> x == u , auxMon ) for u in unique(auxMon))
+    
     unique!(auxMon)
+    
     gList = []
+    
     for i = 1:length(auxMon)-1
         push!(gList, 0.5 * sum(dot(vec(list[2][j]), vec(list[3][i][j])) for j = 1:length(list[2])))
     end
+    
     push!(gList, 1.0)
+    
     dict = Dict([auxMon[i] => gList[i] for i = 1:length(auxMon)])
-    newMon = fillmonomialsAlt(2, r)
+    
+    newMon = fillmonomials(n, r)
+    
     gListFin = []
     for el in newMon
         push!(gListFin, dict[sort!(el)])
     end
     reverse!(gListFin)
     cd(@__DIR__)
-    str1 = "sigmakernel"
+    if bar 
+        str1 = "sigmaBarkernel"
+    else
+        str1 = "sigmakernel"
+    end
     str1 *= string(r)
     io = open(str1, "w")
     for i = 1:length(gListFin)
@@ -442,10 +446,7 @@ function setUpModel(n::Integer, r::Integer, bar::Bool, silent::Bool, solver::Str
         push!(blcksizes, size(vrbl[i], 1))
     end
     @info("Blocksizes: $blcksizes")
-    #display(blcksizes)
     @info("Number of constraints: $numconstr")
-    #@info("Number of constraints (alt): $(length(constrMat)+length(constrMatTwo)+1)")
-    #print(m)
     return m, vrbl, obj, gcoeffMat
 
 end
@@ -498,93 +499,22 @@ function sigmaSymRedEff(n::Integer, r::Integer, bar::Bool, silent::Bool, solver 
     @time m, vrbl, obj, gcoeffMat = setUpModel(n, r, bar, silent, solver, dictBaseproducts, baseProducts, fbas, rMons, dictMons)
 
     @info("Optimize called...")
-    # print(m)
     @time optimize!(m)
     display((r, termination_status(m)))
     if bar
         result = value.(obj)
-        #display(result)
     else
         result = n - (n / 2) * value.(obj)
     end
 
-    #print("\n \n")
-    # if displaySol
-    #     for i = 1:length(vrbl)
-    #         display(value.(vrbl[i]))
-    #     end
-    # end
     listVars = []
     for i = 1:length(vrbl)
         push!(listVars, value.(vrbl[i]))
     end
     @info("Objective value: $result")
     return value.(obj), listVars, gcoeffMat
+
+
 end
 
 @time list = sigmaSymRedEff(2,13, true, false, "CSDP");
-
-writeKernel(list, 2, 50)
-
-println("\n \n ")
-#
-#
-sigmaVal = []
-for i = 10:-1:1
-    @time list = sigmaSymRedEff(4, i, false, true, "CSDP")
-    #push!(sigmaVal, list[1])
-    #writeKernel(list, 2, i)
-end
-
-A = initializeBasis(4,13);
-for i = 1:length(A)
-    display(length(A[i]))
-end
-    #A = returnProductsDict(2,2)
-
-#A[4]
-#A[5]
-
-# for n = 2:5
-#     for r = 1:10
-#         fbas = initializeBasis(n,r)
-#         knr = length(fbas)
-#         print("\$",n,"\$", " & ", "\$",r,"\$", "& ", "\$",knr,"\$", "&" )
-#         for i = 1:knr
-#             print("\$",length(fbas[i]),"\$"," , ")
-#         end
-#         print(" & ", "\$",binomial(n+r,r), "\$ \\\\ \n" )
-#         print("\\hline \n")
-#     end
-#     print("\\hline \n")
-# end
-
-
-
-
-auxMon = fillmonomials(2,50)
-
-#push!(gList, 1.0)
-#dict = Dict([auxMon[i] => gList[i] for i = 1:length(auxMon)])
-#newMon = fillmonomialsAlt(2, 50)
-gListFin = []
-for el in auxMon
-    if el[1] <= 25 && el[2] <= 25
-        push!(gListFin, gJ(el[1],25)*gJ(el[2],25))
-    else
-        push!(gListFin, 0)
-    end
-end
-#gListFin
-reverse!(gListFin)
-cd(@__DIR__)
-str1 = "prodJack50"
-#str1 *= string(r)
-io = open(str1, "w")
-for i = 1:length(gListFin)
-    str = string(gListFin[i])
-    write(io, str * "\n")
-end
-close(io)
-
-F = initializeBasis(3,3)
