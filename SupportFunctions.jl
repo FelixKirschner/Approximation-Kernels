@@ -159,10 +159,12 @@ function writeKernel(list, n::Integer, r::Integer, bar::Bool)
     reverse!(gListFin)
     cd(@__DIR__)
     if bar
-        str1 = "sigmaBarkernel"
+        str1 = "SigmaBarKernel_n"
     else
-        str1 = "sigmakernel"
+        str1 = "SigmaKernel_n"
     end
+    str1 *=string(n)
+    str1 *="r"
     str1 *= string(r)
     io = open(str1, "w")
     for i = 1:length(gListFin)
