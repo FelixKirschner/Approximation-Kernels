@@ -7,4 +7,4 @@ We also include the coefficients of kernels obtained by running the program for 
 
 To run the programm set $n$ to be the number of variables, $r$ to the degree, bar = true if you want to minimize $\bar \sigma_r^2$ and bar = false if you want to minimize $\sigma_r^2$. Set silent = true if you want to suppress the solver output. 
 
-Plan: Also add a PDF explaining in details the theoretical details of the symmetry adapted basis construction.
+Plan: Also add a PDF explaining in more detail the theory of the symmetry adapted basis construction.
