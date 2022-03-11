@@ -47,13 +47,10 @@ function sigmaSymRedEff(n::Integer, r::Integer, bar::Bool, silent::Bool, solver 
 
 end
 
-
-n = 3
-
-r = 10
-
 bar = true
+for r = 11:12
+    list = sigmaSymRedEff(4, r, bar, false, "CSDP");
+    writeKernel(list, 4, r, bar)
+end
 
-@time list = sigmaSymRedEff(n, r, bar, false, "CSDP");
-
-writeKernel(list, n, r, bar)
+initializeBasis(2,2)
