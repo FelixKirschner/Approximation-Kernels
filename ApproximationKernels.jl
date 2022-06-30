@@ -13,7 +13,7 @@ include("SymmetryAdaptedBasis.jl")
 
 
 ##
-function sigmaSymRedEff(n::Integer, r::Integer, bar::Bool, silent::Bool, solver = "Mosek")
+function sigmaSymRedEff(n::Integer, r::Integer, silent::Bool, solver = "Mosek", bar = false)
 
     @time baseProducts, dictBaseproducts, fbas, rMons, dictMons = returnProductsDict(n, r)
 
@@ -50,7 +50,7 @@ end
 
 n = 2
 r = 20 
-bar = true
+bar = false
 silent = false
-list = sigmaSymRedEff(n, r, bar, silent, "CSDP");
-writeKernel(list, n, r, bar)
+@time list = sigmaSymRedEff(n, r, silent, "CSDP");
+#writeKernel(list, n, r, bar)
