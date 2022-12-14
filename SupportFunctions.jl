@@ -174,7 +174,7 @@ function writeKernel(list, n::Integer, r::Integer, bar::Bool)
     close(io)
 end
 
-function setUpModel(n::Integer, r::Integer, bar::Bool, silent::Bool, solver::String, dictBaseproducts, baseProducts, fbas, rMons, dictMons)
+function setUpModel(n::Integer, r::Integer, fixr::Integer, bar::Bool, silent::Bool, solver::String, dictBaseproducts, baseProducts, fbas, rMons, dictMons)
     #This function sets up the JuMP model
 
     vrbl = Array{VariableRef}[]
@@ -224,7 +224,7 @@ function setUpModel(n::Integer, r::Integer, bar::Bool, silent::Bool, solver::Str
         end
     end
 
-    auxMon = fillmonomials(n, r)
+    auxMon = fillmonomials(n, fixr)
 
     for el in auxMon
         sort!(el)
@@ -233,7 +233,7 @@ function setUpModel(n::Integer, r::Integer, bar::Bool, silent::Bool, solver::Str
     unique!(auxMon)
 
 
-    @info("Creating matrices for γ in IN_r^n...")
+    @info("Creating matrices for γ in IN_fixr^n...")
 
     for gamma in auxMon
         if gamma == [0 for i = 1:n]
@@ -453,14 +453,15 @@ function setUpModel(n::Integer, r::Integer, bar::Bool, silent::Bool, solver::Str
     for i = 1:length(vrbl)
         push!(blcksizes, size(vrbl[i], 1))
     end
-    @info("Blocksizes: $blcksizes")
+    unred = binomial(n+r,r);
+    @info("Blocksizes: $blcksizes vs. unreduced: $unred")
     @info("Number of constraints: $numconstr")
     return m, vrbl, obj, gcoeffMat
 
 end
 
 
-function returnProductsDict(n::Integer, r::Integer)
+function returnProductsDict(n::Integer, r::Integer, fixr::Integer)
 
     dictMons = Dict()
     rMons = []
@@ -486,7 +487,7 @@ function returnProductsDict(n::Integer, r::Integer)
                         tmp = dictMons[el]
                         dictMons[el] = push!(tmp, [i1, i2, i3])
                     end
-                    if tmpSum > r
+                    if tmpSum > fixr
                         push!(rMons, el)
                     end
                 end
